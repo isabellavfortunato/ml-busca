@@ -1,7 +1,6 @@
 {
   "name": "ml-busca",
   "version": "1.0.0",
-  "engines": { "node": "24.x" },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
