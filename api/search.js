@@ -1,20 +1,21 @@
-export const config = { runtime: 'edge' };
+export default async function handler(req, res) {
+  const q = req.query?.q;
+  if (!q) return res.status(400).json({ erro: "q obrigatorio" });
 
-export default async function handler(req) {
-  const { searchParams } = new URL(req.url);
-  const q = searchParams.get('q');
-  if (!q) return new Response(JSON.stringify({ error: "Parametro q obrigatorio" }), { status: 400 });
+  const url = new URL("https://api.mercadolibre.com/sites/MLB/search");
+  url.searchParams.set("q", q);
+  url.searchParams.set("sort", "price_asc");
+  url.searchParams.set("limit", "50");
 
+  let status, texto;
   try {
-    const url = `https://api.mercadolibre.com/sites/MLB/search?q=${encodeURIComponent(q)}&sort=price_asc&limit=50`;
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`ML retornou ${response.status}`);
-    const data = await response.json();
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { 'Access-Control-Allow-Origin': '*', 'Content-Type': 'application/json' }
-    });
+    const r = await fetch(url.toString());
+    status = r.status;
+    texto = await r.text();
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return res.status(500).json({ etapa: "fetch", erro: e.message });
   }
+
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.status(200).json({ status_ml: status, resposta: texto.slice(0, 500) });
 }
